@@ -193,7 +193,6 @@ const requestListener = async (req, res) => {
     req.on("end", async () => {
       try {
         const data = JSON.parse(body);
-
         if (isUndefined(data.name) || isNotValidSting(data.name)) {
           res.writeHead(400, headers);
           res.write(
@@ -208,7 +207,7 @@ const requestListener = async (req, res) => {
         const skillRepo = await AppDataSource.getRepository("SKILL");
         const existSkill = await skillRepo.find({
           where: {
-            name: data.name,
+            "name": "data.name",
           },
         });
         if (existSkill.length > 0) {
