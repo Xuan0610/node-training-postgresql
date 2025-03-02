@@ -204,13 +204,14 @@ const requestListener = async (req, res) => {
           res.end();
           return;
         }
-        const skillRepo = await AppDataSource.getRepository("SKILL");
-        const existSkill = await skillRepo.find({
+        //檢查資料是否有重復
+        const SkillRepo = await AppDataSource.getRepository("Skill");
+        const findSkill = await SkillRepo.find({
           where: {
-            "name": "data.name",
+            name: data.name,
           },
         });
-        if (existSkill.length > 0) {
+        if (findSkill.length > 0) {
           res.writeHead(409, headers);
           res.write(
             JSON.stringify({
@@ -221,10 +222,10 @@ const requestListener = async (req, res) => {
           res.end();
           return;
         }
-        const newSkill = await skillRepo.create({
+        const newSkill = await SkillRepo.create({
           name: data.name,
         });
-        const result = await skillRepo.save(newSkill);
+        const result = await SkillRepo.save(newSkill);
         res.writeHead(200, headers);
         res.write(
           JSON.stringify({
@@ -235,20 +236,49 @@ const requestListener = async (req, res) => {
         res.end();
       } catch (error) {
         console.error(error);
-        res.writeHead(500, headers);
-        res.write(
-          JSON.stringify({
-            status: "error",
-            message: "伺服器錯誤",
-          })
-        );
-        res.end();
+        errorHandle(res);
       }
     });
   } else if (
-    req.url.startsWith("/api/credit-package/:creditPackageId/") &&
+    req.url.startsWith("/api/coaches/skill/:skillId") &&
     req.method === "DELETE"
   ) {
+    try {
+      const skillId = req.url.split("/").pop();
+      if (isUndefined(skillId) || isNotValidSting(skillId)) {
+        res.writeHead(400, headers);
+        res.write(
+          JSON.stringify({
+            status: "failed",
+            message: "ID錯誤",
+          })
+        );
+        res.end();
+        return;
+      }
+      const result = await AppDataSource.getRepository("Skill").delete(skillId);
+      if (result.affected === 0) {
+        res.writeHead(400, headers);
+        res.write(
+          JSON.stringify({
+            status: "failed",
+            message: "ID錯誤",
+          })
+        );
+        res.end();
+        return;
+      }
+      res.writeHead(200, headers);
+      res.write(
+        JSON.stringify({
+          status: "success",
+        })
+      );
+      res.end();
+    } catch (error) {
+      console.error(error);
+      errorHandle(res);
+    }
   } else if (req.method === "OPTIONS") {
     res.writeHead(200, headers);
     res.end();
