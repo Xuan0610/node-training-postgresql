@@ -193,14 +193,8 @@ const requestListener = async (req, res) => {
     req.on("end", async () => {
       try {
         const data = JSON.parse(body);
-        if (
-          isUndefined(data.name) ||
-          isNotValidSting(data.name) ||
-          isUndefined(data.credit_amount) ||
-          isNotValidInteger(data.credit_amount) ||
-          isUndefined(data.price) ||
-          isNotValidInteger(data.price)
-        ) {
+
+        if (isUndefined(data.name) || isNotValidSting(data.name)) {
           res.writeHead(400, headers);
           res.write(
             JSON.stringify({
