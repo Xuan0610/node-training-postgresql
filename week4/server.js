@@ -2,19 +2,23 @@ require("dotenv").config();
 const http = require("http");
 const AppDataSource = require("./db");
 
+// 若為Undefined
 function isUndefined(value) {
   return value === undefined;
 }
 
+// 若不是字串格式
 function isNotValidSting(value) {
   return typeof value !== "string" || value.trim().length === 0 || value === "";
 }
 
+// 若不是數字格式
 function isNotValidInteger(value) {
   return typeof value !== "number" || value < 0 || value % 1 !== 0;
 }
 
 const requestListener = async (req, res) => {
+  // 設置header
   const headers = {
     "Access-Control-Allow-Headers":
       "Content-Type, Authorization, Content-Length, X-Requested-With",
@@ -22,11 +26,13 @@ const requestListener = async (req, res) => {
     "Access-Control-Allow-Methods": "PATCH, POST, GET,OPTIONS,DELETE",
     "Content-Type": "application/json",
   };
+
   let body = "";
   req.on("data", (chunk) => {
     body += chunk;
   });
 
+  // 取得購買方案 credit-package -> GET
   if (req.url === "/api/credit-package" && req.method === "GET") {
     try {
       const packages = await AppDataSource.getRepository("CreditPackage").find({
@@ -50,7 +56,9 @@ const requestListener = async (req, res) => {
       );
       res.end();
     }
-  } else if (req.url === "/api/credit-package" && req.method === "POST") {
+  }
+  // 新增購買方案 credit-package -> POST
+  else if (req.url === "/api/credit-package" && req.method === "POST") {
     req.on("end", async () => {
       try {
         const data = JSON.parse(body);
@@ -117,7 +125,9 @@ const requestListener = async (req, res) => {
         res.end();
       }
     });
-  } else if (
+  }
+  // 刪除購買方案 credit-package -> DELETE
+  else if (
     req.url.startsWith("/api/credit-package/") &&
     req.method === "DELETE"
   ) {
@@ -166,7 +176,9 @@ const requestListener = async (req, res) => {
       );
       res.end();
     }
-  } else if (req.url === "/api/coaches/skill" && req.method === "GET") {
+  }
+  // 取得教練專長列表 skill -> GET
+  else if (req.url === "/api/coaches/skill" && req.method === "GET") {
     try {
       const skills = await AppDataSource.getRepository("Skill").find({
         select: ["id", "name"],
@@ -189,10 +201,13 @@ const requestListener = async (req, res) => {
       );
       res.end();
     }
-  } else if (req.url === "/api/coaches/skill" && req.method === "POST") {
+  }
+  // 新增教練專長 skill -> POST
+  else if (req.url === "/api/coaches/skill" && req.method === "POST") {
     req.on("end", async () => {
       try {
         const data = JSON.parse(body);
+        // 檢查欄位填寫正確性 400回傳
         if (isUndefined(data.name) || isNotValidSting(data.name)) {
           res.writeHead(400, headers);
           res.write(
@@ -204,7 +219,7 @@ const requestListener = async (req, res) => {
           res.end();
           return;
         }
-        //檢查資料是否有重復
+        // 檢查資料是否有重復 409回傳
         const SkillRepo = await AppDataSource.getRepository("Skill");
         const findSkill = await SkillRepo.find({
           where: {
@@ -239,12 +254,15 @@ const requestListener = async (req, res) => {
         errorHandle(res);
       }
     });
-  } else if (
-    req.url.startsWith("/api/coaches/skill/:skillId") &&
+  }
+  // 刪除教練專長 skill -> DELETE
+  else if (
+    req.url.startsWith("/api/coaches/skill/") &&
     req.method === "DELETE"
   ) {
     try {
       const skillId = req.url.split("/").pop();
+      // 字串檢查 -> 400回傳
       if (isUndefined(skillId) || isNotValidSting(skillId)) {
         res.writeHead(400, headers);
         res.write(
@@ -256,7 +274,8 @@ const requestListener = async (req, res) => {
         res.end();
         return;
       }
-      const result = await AppDataSource.getRepository("Skill").delete(skillId);
+      // 刪除時資料庫無此ID資料 -> 400回傳
+      const result = await AppDataSource.getRepository("SKILL").delete(skillId);
       if (result.affected === 0) {
         res.writeHead(400, headers);
         res.write(
